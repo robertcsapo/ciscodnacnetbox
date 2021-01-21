@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load buttons %}
+
+{% block content %}
+
+<h1>Cisco DNA Center</h1>
+<h2>Sync Status - Sites</h2>
+
+<div class="row">
+<div class="col-md-12">
+
+<div class="table-responsive">
+
+{% for dnac, sites in data.items %}
+<h3>{{ dnac }}</h3>
+<table class="table table-hover table-headings">
+<thead>
+<tr>
+    <th>Site</th>¨
+    <th>Slug</th>
+    <th>Type</th>
+    <th>Country</th>
+</tr>
+</thead>
+
+{% for site in sites %}
+<tbody>
+<tr class="even">
+<td>{{ site.name }}</td>
+<td>{{ site.siteNameHierarchy }}</td>
+<td>
+    {% if site.type is not None %}
+    <span class="label label-primary">{{ site.type }}</span>
+    {% endif %}
+</td>
+<td>
+    {% if site.country is not None %}
+    <span class="label label-primary">{{ site.country }}</span>
+    {% endif %}
+</td>
+</tr>
+</tbody>
+{% endfor %}
+</table>
+{% endfor %}
+
+</div>
+
+</div>
+</div>
+
+{% endblock %}

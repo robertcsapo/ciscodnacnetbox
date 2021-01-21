@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load buttons %}
+
+{% block content %}
+
+
+<div class="pull-right noprint">
+<a href="/plugins/ciscodnacnetbox/status/" class="btn btn-primary">
+<span class="mdi mdi-view-dashboard" aria-hidden="true"></span> Status
+</a>
+</div>
+
+<h1>Cisco DNA Center</h1>
+<h2>Background Task</h2>
+
+<div class="row">
+<div class="col-md-12">
+
+    <div class="table-responsive">
+        <table class="table table-hover table-headings">
+        <thead>
+        <tr>
+            <th>Job ID</th>
+            <th>Task</th>
+            <th>Exception</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="even">
+        <td>{{ data.id }}</td>
+        <td>{{ data.task }}</td>
+        <td>{{ data.exception }}</td>
+        <td><i class="text-danger mdi mdi-close-circle-outline"></i></td>
+        </tr>
+        </tbody>
+        </table>
+    </div>
+
+</div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'generic/object_edit.html' %}
+{% load form_helpers %}
+
+{% block form %}
+    <div class="panel panel-default">
+        <div class="panel-heading"><strong>Cisco DNA Center Settings</strong></div>
+        <div class="panel-body">
+            {% render_field form.hostname %}
+            {% render_field form.username %}
+            {% render_field form.password %}
+            {% render_field form.version %}
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading"><strong>HTTPS Verify Certificate</strong></div>
+        <div class="panel-body">
+            {% render_field form.verify %}
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading"><strong>Config Enabled</strong></div>
+        <div class="panel-body">
+            {% render_field form.status %}
+        </div>
+    </div>
+{% endblock %}

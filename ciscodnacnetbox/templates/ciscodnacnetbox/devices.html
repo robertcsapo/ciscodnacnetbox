@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load buttons %}
+
+{% block content %}
+
+<h1>Cisco DNA Center</h1>
+<h2>Devices (no sync)</h2>
+
+<div class="row">
+<div class="col-md-12">
+
+<div class="table-responsive">
+
+{% for dnac, devices in data.items %}
+<h3>{{ dnac }}</h3>
+<table class="table table-hover table-headings">
+<thead>
+<tr>
+    <th>Name</th>
+    <th>Status</th>
+    <th>Role</th>
+    <th>Type</th>
+    <th>Platform ID</th>
+    <th>IP Address</th>
+    <th>Serial Number</th>
+</tr>
+</thead>
+
+{% for device in devices %}
+<tbody>
+<tr class="even">
+<td>{{ device.hostname }}</td>
+<td>
+    {% if "Reachable" in device.reachabilityStatus %}
+        <span class="label label-success">Reachable</span>
+    {% else %}
+    <span class="label label-danger">Unreachable</span>
+    {% endif %}
+</td>
+<td><label class="label" style="color: #ffffff; background-color: #2196f3">{{ device.role }}</label></td>
+<td>{{ device.type }}</td>
+<td>{{ device.platformId }}</td>
+<td>{{ device.managementIpAddress }}</td>
+<td>{{ device.serialNumber }}</td>
+</tr>
+</tbody>
+{% endfor %}
+</table>
+{% endfor %}
+
+</div>
+
+</div>
+</div>
+
+{% endblock %}

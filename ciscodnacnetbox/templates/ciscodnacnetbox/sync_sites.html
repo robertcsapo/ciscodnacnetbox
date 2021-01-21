@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load buttons %}
+
+{% block content %}
+
+<h1>Cisco DNA Center</h1>
+<h2>Sync Status - Sites</h2>
+
+<div class="row">
+<div class="col-md-12">
+
+<div class="table-responsive">
+
+{% for dnac, sites in data.items %}
+<h3>{{ dnac }}</h3>
+<table class="table table-hover table-headings">
+<thead>
+<tr>
+    <th>Site</th>
+    <th>Status</th>
+    <th>Slug</th>
+    <th>Sync Action</th>
+</tr>
+</thead>
+
+{% for site in sites %}
+<tbody>
+<tr class="even">
+<td>{{ site.name }}</td>
+<td class="min-width"><span class="label label-{{ site.status_label }}">{{ site.status }}</span></td>
+<td>{{ site.slug }}</td>
+<td>{{ site.sync_status }}</td>
+</tr>
+</tbody>
+{% endfor %}
+</table>
+{% endfor %}
+
+</div>
+
+</div>
+</div>
+
+{% endblock %}
