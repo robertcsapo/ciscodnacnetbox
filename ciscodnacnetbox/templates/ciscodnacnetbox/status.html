@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load buttons %}
+
+{% block content %}
+
+<div class="pull-right noprint">
+<a href="/plugins/ciscodnacnetbox/settings/" class="btn btn-primary">
+<span class="mdi mdi-cog" aria-hidden="true"></span> Settings
+</a>
+<a href="/plugins/ciscodnacnetbox/status/" class="btn btn-primary">
+<span class="mdi mdi-refresh" aria-hidden="true"></span> Refresh
+</a>
+</div>
+
+<h1>Cisco DNA Center</h1>
+<h2>Status</h2>
+
+<div class="row">
+<div class="col-md-12">
+
+<div class="table-responsive">
+
+<h3>Cisco DNA Centers (Tenants)</h3>
+<table class="table">
+<tbody>
+<tr style="text-align: center;" class="even">
+<td style="width: 33.3333%;">
+    <a href="{% url 'plugins:ciscodnacnetbox:sync_full' %}">
+    <button type="button" class="btn btn-lg btn-primary" aria-hidden="true">
+    <i class="mdi mdi-all-inclusive mdi-48px">
+    </i>
+    </button>
+    <br>Full Sync</td>
+    </a>
+<td style="width: 33.3333%;">
+    <a href="{% url 'plugins:ciscodnacnetbox:sync_sites' %}">
+    <button type="button" class="btn btn-lg btn-primary" aria-hidden="true">
+    <i class="mdi mdi-domain mdi-48px">
+    </i>
+    </button>
+    <br>Sites Sync</td>
+    </a>
+<td style="width: 33.3333%;">
+    <a href="{% url 'plugins:ciscodnacnetbox:sync_devices' %}">
+    <button type="button" class="btn btn-lg btn-primary" aria-hidden="true">
+    <i class="mdi mdi-router mdi-48px">
+    </i>
+    </button>
+    <br>Devices Sync
+    </a>
+    </td>
+</tr>
+</tbody>
+</table>
+
+<h3>Instances</h3>
+
+<table class="table table-hover table-headings">
+    <thead>
+        <tr>
+        <th>Netbox</th>
+        <th>Sites</th>
+        <th>Devices</th>
+        <th></th>
+        <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr class="even">
+        <td>{{ netbox }}</td>
+        <td>{{ netbox_sites }}</td>
+        <td>{{ netbox_devices }}</td>
+        <td></td>
+        <td></td>
+        </tr>
+    </tbody>
+    <thead>
+        <tr>
+        <th>Cisco DNA Center</th>
+        <th>Sites</th>
+        <th>Devices</th>
+        <th>Sync</th>
+        <th>Status</th>
+        </tr>
+    </thead>
+    {% for tenant, data in dnac.items %}
+    <tbody>
+        <tr class="even">
+        <td>{{ tenant }}</td>
+        <td>
+            <a href="{% url 'plugins:ciscodnacnetbox:sites' pk=data.id %}">
+            {{ data.sites }}
+            </a>
+        </td>
+        <td>
+            <a href="{% url 'plugins:ciscodnacnetbox:devices' pk=data.id %}">
+            {{ data.devices }}
+            </a>
+        </td>
+        <td>
+            {% if 'success' in data.api %}
+            <a href="{% url 'plugins:ciscodnacnetbox:sync_sites' pk=data.id %}" class="btn btn-xs btn-primary mdi mdi-domain" aria-hidden="true"></a>
+            <a href="{% url 'plugins:ciscodnacnetbox:sync_devices' pk=data.id %}" class="btn btn-xs btn-primary mdi mdi-router" aria-hidden="true"></a>
+            {% else %}
+            <span class="text-primary disabled" tabindex="0" data-toggle="tooltip" title="{{ data.api }}"><i class="btn btn-xs btn-primary mdi mdi-domain disabled"></i></span>
+            <span class="text-primary disabled" tabindex="0" data-toggle="tooltip" title="{{ data.api }}"><i class="btn btn-xs btn-primary mdi mdi-router disabled"></i></span>
+            {% endif %}
+        </td>
+        <td>
+            {% if 'success' in data.api %}
+            <span class="text-success" tabindex="0" data-toggle="tooltip" title="{{ data.api }}"><i class="mdi mdi-check-circle-outline"></i></span>
+            {% elif 'disabled' in data.api %}
+            <span class="text-primary" tabindex="0" data-toggle="tooltip" title="{{ data.api }}"><i class="mdi mdi-pause-circle-outline"></i></span>
+            {% else %}
+            <span class="text-danger" tabindex="0" data-toggle="tooltip" title="{{ data.api }}"><i class="mdi mdi-close-circle-outline"></i></span>
+            {% endif %}
+        </td>
+        </td>
+        </tr>
+    </tbody>
+    {% endfor %}
+</table>
+
+
+<h3>NetBox Tenants (Cisco DNA Center)</h3>
+
+<table class="table table-hover table-headings">
+    <thead>
+        <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Created</th>
+        <th>Purge</th>
+        <th>Managed by ciscodnacnetbox plugin</th>
+        </tr>
+    </thead>
+    {% for tenant, data in netbox_tenants.items %}
+    <tbody>
+        <tr class="even">
+        <td>{{ tenant }}</td>
+        <td>{{ data.description }} </td>
+        <td>{{ data.created }}</td>
+        <td><a href="{% url 'plugins:ciscodnacnetbox:purge_tenant' pk=data.id %}" class="btn btn-xs btn-danger mdi mdi-delete-forever" aria-hidden="true"></a></td>
+        <td>
+            {% if data.managed %}
+            <span class="text-success" tabindex="0" data-toggle="tooltip" title="Managed"><i class="mdi mdi-check-circle-outline"></i></span>
+            {% else %}
+            <span class="text-danger" tabindex="0" data-toggle="tooltip" title="Not Managed"><i class="mdi mdi-close-circle-outline"></i></span>
+            {% endif %}
+        </td>
+        </tr>
+    </tbody>
+    {% endfor %}
+</table>
+
+</div>
+</div>
+</div>
+
+{% endblock %}

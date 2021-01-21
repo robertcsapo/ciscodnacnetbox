@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load buttons %}
+
+{% block content %}
+
+<h1>Cisco DNA Center</h1>
+<h2>Sync Status - Devices</h2>
+
+<div class="row">
+<div class="col-md-12">
+
+<div class="table-responsive">
+
+{% for dnac, devices in data.items %}
+<h3>{{ dnac }}</h3>
+<table class="table table-hover table-headings">
+<thead>
+<tr>
+    <th>Name</th>
+    <th>Status</th>
+    <th>Role</th>
+    <th>Type</th>
+    <th>Site</th>
+    <th>IP Address</th>
+    <th>Serial Number</th>
+    <th>Sync Action</th>
+</tr>
+</thead>
+
+{% for device in devices %}
+<tbody>
+<tr class="even">
+<td>{{ device.name }}</td>
+<td><span class="label label-{{ device.status_label }}">{{ device.status }}</span></td>
+<td><label class="label" style="color: #ffffff; background-color: #2196f3">{{ device.role }}</label></td>
+<td>{{ device.type }}</td>
+<td>{{ device.site }}</td>
+<td>{{ device.primary_ip4 }}</td>
+<td>{{ device.serial }}</td>
+<td>{{ device.sync_status }}</td>
+</tr>
+</tbody>
+{% endfor %}
+</table>
+{% endfor %}
+
+</div>
+
+</div>
+</div>
+
+{% endblock %}
