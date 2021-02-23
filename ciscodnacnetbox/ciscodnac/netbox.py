@@ -226,7 +226,7 @@ class Netbox:
                         comments="Managed by {}".format(tenant),
                         tenant=Tenant.objects.get(name=tenant),
                     )
-                    sync = "Error IPv4"
+                    sync = "Error"
                     return Device.objects.get(serial=device.serialNumber), sync
                 else:
                     Device.objects.create(
@@ -242,26 +242,10 @@ class Netbox:
                     )
                     sync = "Created"
             else:
-                if (
-                    device.serialNumber
-                    != Device.objects.get(
-                        primary_ip4=device.primary_ip4,
-                        tenant=Tenant.objects.get(name=tenant).id,
-                    ).serial
-                ):
+                try:
                     # There can't be duplicate IPs in one tenant.
                     # But DNAC can register duplicate IPs, if only one is Reachable
-                    Device.objects.filter(serial=device.serialNumber, tenant=Tenant.objects.get(name=tenant).id,).update(
-                        name=device.hostname,
-                        device_role=device.role,
-                        device_type=device.family_type,
-                        status=device.status,
-                        site=device.site,
-                        comments="Managed by {}".format(tenant),
-                        tenant=Tenant.objects.get(name=tenant).id,
-                    )
-                    sync = "Error IPv4"
-                else:
+                    device.serialNumber = Device.objects.get(primary_ip4=device.primary_ip4, tenant=Tenant.objects.get(name=tenant).id,).serial
                     Device.objects.filter(serial=device.serialNumber, tenant=Tenant.objects.get(name=tenant).id,).update(
                         name=device.hostname,
                         device_role=device.role,
@@ -273,6 +257,19 @@ class Netbox:
                         tenant=Tenant.objects.get(name=tenant).id,
                     )
                     sync = "Updated"
+                except Exception as error_msg:
+                    print(error_msg)
+                    Device.objects.filter(serial=device.serialNumber, tenant=Tenant.objects.get(name=tenant).id,).update(
+                        name=device.hostname,
+                        device_role=device.role,
+                        device_type=device.family_type,
+                        status=device.status,
+                        site=device.site,
+                        comments="Managed by {}".format(tenant),
+                        tenant=Tenant.objects.get(name=tenant).id,
+                    )
+                    sync = "Error"
+                    pass
 
             # Assign IP Address to Device in NetBox
             IPAddress.objects.filter(address=str(device.primary_ip4), tenant=Tenant.objects.get(name=tenant).id,).update(
