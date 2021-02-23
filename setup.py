@@ -21,7 +21,7 @@ PACKAGE_KEYWORDS = [
 
 setup(
     name="ciscodnacnetbox",
-    version="1.0",
+    version="1.0.1",
     description="Cisco DNA Center Integration with NetBox",
     long_description=long_description,
     long_description_content_type="text/markdown",
