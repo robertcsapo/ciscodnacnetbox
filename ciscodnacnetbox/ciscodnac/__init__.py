@@ -6,7 +6,7 @@ from ..models import Settings
 class CiscoDNAC:
 
     # Get all tenants from Settings
-    __tenants = Settings.objects.all().nocache()
+    __tenants = Settings.objects.all()
 
     def __init__(self, **kwargs):
         """
@@ -25,7 +25,7 @@ class CiscoDNAC:
             obj = self.auth(tenant)
 
             # Check that Auth is successful
-            if obj:
+            if obj[0]:
                 self.dnac[tenant.hostname] = obj[1]
             return
 
@@ -60,7 +60,7 @@ class CiscoDNAC:
         except Exception as error_msg:
             print("Error for {}: {}".format(tenant, error_msg))
             self.dnac_status[tenant.hostname] = error_msg
-            return False
+            return False, None
 
     def devices(self, tenant):
         """

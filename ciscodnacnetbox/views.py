@@ -21,7 +21,7 @@ class SettingsView(generic.ObjectListView):
     """
     Cisco DNA Center Settings
     """
-    
+
     queryset = Settings.objects.all()
     table = SettingsTable
     template_name = "ciscodnacnetbox/settings.html"
@@ -240,7 +240,9 @@ class PurgeTenant(View):
             {
                 "obj": tenant,
                 "form": form,
-                "return_url": reverse("plugins:ciscodnacnetbox:purge_tenant", args=(kwargs["pk"],)),
+                "return_url": reverse(
+                    "plugins:ciscodnacnetbox:purge_tenant", args=(kwargs["pk"],)
+                ),
             },
         )
 

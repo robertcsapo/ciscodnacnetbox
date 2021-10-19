@@ -10,7 +10,9 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(auto_created=True, primary_key=True, serialize=False),
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False
+                    ),
                 ),
                 ("hostname", models.CharField(max_length=2000, unique=True)),
                 ("username", models.CharField(max_length=100)),

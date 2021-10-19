@@ -70,7 +70,10 @@ class Netbox:
                     __obj = Device.objects.get(serial=kwargs["filter"])
                 if kwargs["model"].lower() == "IPAddress".lower():
                     kwargs["filter"] = str(ipaddress.IPv4Network(kwargs["filter"])[0])
-                    __obj = IPAddress.objects.get(address=kwargs["filter"])
+                    __obj = IPAddress.objects.get(
+                        address=kwargs["filter"],
+                        tenant=Tenant.objects.get(name=kwargs["tenant"]).id,
+                    )
                 if kwargs["model"].lower() == "Site".lower():
                     __obj = Site.objects.get(name=kwargs["filter"])
 
@@ -86,6 +89,10 @@ class Netbox:
             """
             Handle Site operations with NetBox
             """
+
+            # Match size in NetBox Database
+            site.siteNameHierarchy = site.siteNameHierarchy[0:100]
+            site.slug = site.slug[0:100]
 
             # Gather site in Netbox (site name isn't unique, even with multiple tenants)
             if Site.objects.filter(name=site.siteNameHierarchy).exists() is False:
@@ -113,16 +120,29 @@ class Netbox:
                 for additionalInfo in site.additionalInfo:
                     if "Location" in additionalInfo["nameSpace"]:
                         if additionalInfo["attributes"]["address"] is not None:
-                            if __obj.physical_address != additionalInfo["attributes"]["address"]:
-                                __obj.physical_address = additionalInfo["attributes"]["address"]
+                            if (
+                                __obj.physical_address
+                                != additionalInfo["attributes"]["address"]
+                            ):
+                                __obj.physical_address = additionalInfo["attributes"][
+                                    "address"
+                                ]
                                 __save = True
                         if additionalInfo["attributes"]["latitude"] is not None:
-                            if __obj.latitude != Decimal(additionalInfo["attributes"]["latitude"]):
-                                __obj.latitude = additionalInfo["attributes"]["latitude"]
+                            if __obj.latitude != Decimal(
+                                additionalInfo["attributes"]["latitude"]
+                            ):
+                                __obj.latitude = additionalInfo["attributes"][
+                                    "latitude"
+                                ]
                                 __save = True
                         if additionalInfo["attributes"]["longitude"] is not None:
-                            if __obj.longitude != Decimal(additionalInfo["attributes"]["longitude"]):
-                                __obj.longitude = additionalInfo["attributes"]["longitude"]
+                            if __obj.longitude != Decimal(
+                                additionalInfo["attributes"]["longitude"]
+                            ):
+                                __obj.longitude = additionalInfo["attributes"][
+                                    "longitude"
+                                ]
                                 __save = True
             if __save is True:
                 # Only update Change log if something is updated
@@ -157,7 +177,12 @@ class Netbox:
             """
 
             # Gather DeviceType in Netbox
-            if DeviceType.objects.filter(manufacturer=manufacture, model=model).exists() is False:
+            if (
+                DeviceType.objects.filter(
+                    manufacturer=manufacture, model=model
+                ).exists()
+                is False
+            ):
                 DeviceType.objects.create(
                     manufacturer=manufacture,
                     model=model,
@@ -202,6 +227,10 @@ class Netbox:
             Handle Device operations with NetBox
             """
 
+            # Match size in NetBox Database
+            device.hostname = device.hostname[0:100]
+            device.serialNumber = device.serialNumber[0:50]
+
             # Check device reachability in Cisco DNA Center
             if device.reachabilityStatus == "Reachable":
                 device.status = DeviceStatusChoices.STATUS_ACTIVE
@@ -215,7 +244,7 @@ class Netbox:
                     tenant=Tenant.objects.get(name=tenant).id,
                 ).exists():
                     # There can't be duplicate IPs in one tenant.
-                    # But DNAC can register duplicate IPs, if only one is Reachable
+                    # But DNAC can register duplicate IPs, if only one is Reachable (within DNAC)
                     Device.objects.create(
                         name=device.hostname,
                         device_role=device.role,
@@ -244,9 +273,15 @@ class Netbox:
             else:
                 try:
                     # There can't be duplicate IPs in one tenant.
-                    # But DNAC can register duplicate IPs, if only one is Reachable
-                    device.serialNumber = Device.objects.get(primary_ip4=device.primary_ip4, tenant=Tenant.objects.get(name=tenant).id,).serial
-                    Device.objects.filter(serial=device.serialNumber, tenant=Tenant.objects.get(name=tenant).id,).update(
+                    # But DNAC can register duplicate IPs, if only one is Reachable (within DNAC)
+                    device.serialNumber = Device.objects.get(
+                        primary_ip4=device.primary_ip4,
+                        tenant=Tenant.objects.get(name=tenant).id,
+                    ).serial
+                    Device.objects.filter(
+                        serial=device.serialNumber,
+                        tenant=Tenant.objects.get(name=tenant).id,
+                    ).update(
                         name=device.hostname,
                         device_role=device.role,
                         device_type=device.family_type,
@@ -259,7 +294,10 @@ class Netbox:
                     sync = "Updated"
                 except Exception as error_msg:
                     print(error_msg)
-                    Device.objects.filter(serial=device.serialNumber, tenant=Tenant.objects.get(name=tenant).id,).update(
+                    Device.objects.filter(
+                        serial=device.serialNumber,
+                        tenant=Tenant.objects.get(name=tenant).id,
+                    ).update(
                         name=device.hostname,
                         device_role=device.role,
                         device_type=device.family_type,
@@ -272,7 +310,10 @@ class Netbox:
                     pass
 
             # Assign IP Address to Device in NetBox
-            IPAddress.objects.filter(address=str(device.primary_ip4), tenant=Tenant.objects.get(name=tenant).id,).update(
+            IPAddress.objects.filter(
+                address=str(device.primary_ip4),
+                tenant=Tenant.objects.get(name=tenant).id,
+            ).update(
                 assigned_object_id=Device.objects.get(serial=device.serialNumber).id,
             )
 
@@ -283,9 +324,13 @@ class Netbox:
             """
             Handle IPAddress operations with NetBox
             """
-
             # Gather IPAddress in Netbox
-            if IPAddress.objects.filter(address=address, tenant=Tenant.objects.get(name=tenant).id).exists() is False:
+            if (
+                IPAddress.objects.filter(
+                    address=address, tenant=Tenant.objects.get(name=tenant).id
+                ).exists()
+                is False
+            ):
                 IPAddress.objects.create(
                     address=address,
                     status=DeviceStatusChoices.STATUS_ACTIVE,
@@ -294,13 +339,21 @@ class Netbox:
                     tenant=Tenant.objects.get(name=tenant),
                 )
             else:
-                IPAddress.objects.filter(address=address, tenant=Tenant.objects.get(name=tenant).id).update(
+                IPAddress.objects.filter(
+                    address=address, tenant=Tenant.objects.get(name=tenant).id
+                ).update(
                     status=DeviceStatusChoices.STATUS_ACTIVE,
                     dns_name=hostname,
                     description="Managed by {}".format(tenant),
                     tenant=Tenant.objects.get(name=tenant).id,
                 )
-            return IPAddress.objects.get(address=address)
+
+            for v in IPAddress.objects.filter(address=address):
+                if tenant == v.tenant:
+                    return IPAddress.objects.get(id=v.id)
+            return IPAddress.objects.get(
+                address=address, tenant=Tenant.objects.get(name=tenant).id
+            )
 
     class Purge:
         @staticmethod
@@ -313,7 +366,12 @@ class Netbox:
             if kwargs["type"] == "devices":
 
                 # Unique Serial Numbers in Netbox
-                netbox_serials = [d.serial for d in Device.objects.filter(tenant=Tenant.objects.get(name=kwargs["tenant"]).id)]
+                netbox_serials = [
+                    d.serial
+                    for d in Device.objects.filter(
+                        tenant=Tenant.objects.get(name=kwargs["tenant"]).id
+                    )
+                ]
 
                 # Unique Serial Numbers in Cisco DNA Center Instance
                 dnac_serials = []
@@ -330,16 +388,27 @@ class Netbox:
                     # Remove diff in NetBox
                     try:
                         for serial in purge:
-                            Device.objects.filter(id=Device.objects.get(serial=serial).id).delete()
+                            Device.objects.filter(
+                                id=Device.objects.get(serial=serial).id
+                            ).delete()
                         return True
                     except Exception as error_msg:
-                        print("Error couldn't delete {}\n{}".format(kwargs["data"], error_msg))
+                        print(
+                            "Error couldn't delete {}\n{}".format(
+                                kwargs["data"], error_msg
+                            )
+                        )
                         return False
             # Delete sites related to Tenant
             elif kwargs["type"] == "sites":
 
                 # Unique slug/uuid in NetBox
-                netbox_sites = [s.slug for s in Site.objects.filter(tenant=Tenant.objects.get(name=kwargs["tenant"]).id)]
+                netbox_sites = [
+                    s.slug
+                    for s in Site.objects.filter(
+                        tenant=Tenant.objects.get(name=kwargs["tenant"]).id
+                    )
+                ]
 
                 # Unique Site id/uuid in Cisco DNA Center Instance
                 dnac_sites = []
@@ -359,7 +428,11 @@ class Netbox:
                             Site.objects.filter(slug=uuid).delete()
                         return True
                     except Exception as error_msg:
-                        print("Error couldn't delete {}\n{}".format(kwargs["data"], error_msg))
+                        print(
+                            "Error couldn't delete {}\n{}".format(
+                                kwargs["data"], error_msg
+                            )
+                        )
                         return False
             else:
                 raise Exception("Not implemented yet")

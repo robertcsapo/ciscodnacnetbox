@@ -1,5 +1,7 @@
 from . import CiscoDNAC
-from cacheops import cache, CacheMiss
+
+# from cacheops import cache, CacheMiss
+from django.core.cache import cache
 from dcim.models import Site, Device
 from dcim.choices import DeviceStatusChoices
 from tenancy.models import Tenant
@@ -46,7 +48,7 @@ class Data:
         data["dnac"] = {}
 
         # Get local settings
-        for tenant in Settings.objects.all().nocache():
+        for tenant in Settings.objects.all():
             data["dnac"][tenant.hostname] = {}
             data["dnac"][tenant.hostname]["id"] = tenant.id
             data["dnac"][tenant.hostname]["sites"] = None
@@ -126,7 +128,9 @@ class Data:
                         "country": None,
                     }
                 results.append(result)
-            results = sorted(results, key=lambda k: k["siteNameHierarchy"], reverse=False)
+            results = sorted(
+                results, key=lambda k: k["siteNameHierarchy"], reverse=False
+            )
             data[tenant] = results
         return data
 
@@ -148,16 +152,20 @@ class Data:
             return data.result
 
         # Check if ongoing RQ Job is ongoing
-        try:
-            job = cache.get("ciscodnacnetbox_bg")
-        except CacheMiss:
+        job = cache.get("ciscodnacnetbox_bg")
+        if job is None:
             # If not, start full sync task
             job = full_sync.delay(**kwargs)
             cache.set("ciscodnacnetbox_bg", job.id, timeout=600)
 
         # Get Job Status
         j = queue.fetch_job(cache.get("ciscodnacnetbox_bg"))
+        job_done = ["finished", "failed"]
         if "finished" == j.get_status():
+            # Start again, if cache expired
+            job = full_sync.delay(**kwargs)
+            cache.set("ciscodnacnetbox_bg", job.id, timeout=600)
+        if j.get_status() in job_done:
             # Start again, if cache expired
             job = full_sync.delay(**kwargs)
             cache.set("ciscodnacnetbox_bg", job.id, timeout=600)
@@ -180,7 +188,9 @@ class Data:
         for tenant, dnac in tenants.dnac.items():
             results = []
             # Sync Cisco DNA Center Tenant
-            Netbox.Sync.tenants(task="system", tenant=tenant, slug=tenant.replace(".", "-"))
+            Netbox.Sync.tenants(
+                task="system", tenant=tenant, slug=tenant.replace(".", "-")
+            )
             # Add tag to Cisco DNA Center Tenant
             Netbox.Sync.tags(
                 task="update",
@@ -193,7 +203,9 @@ class Data:
                 # Unique name for `Global` as it can't be duplicate in NetBox
                 if site.siteNameHierarchy == "Global":
                     suffix = site.id.split("-")
-                    site.siteNameHierarchy = "{} {}".format(site.siteNameHierarchy, suffix[0])
+                    site.siteNameHierarchy = "{} {}".format(
+                        site.siteNameHierarchy, suffix[0]
+                    )
 
                 # Use Cisco DNA Center UUID for Site as Slug
                 site.slug = site.id
@@ -250,7 +262,9 @@ class Data:
             for device in tenants.devices(tenant=dnac):
 
                 # Sync Cisco DNA Center Tenant
-                Netbox.Sync.tenants(task="system", tenant=tenant, slug=tenant.replace(".", "-"))
+                Netbox.Sync.tenants(
+                    task="system", tenant=tenant, slug=tenant.replace(".", "-")
+                )
                 Netbox.Sync.tags(
                     task="update",
                     model="tenant",
@@ -263,7 +277,9 @@ class Data:
 
                     # Sync Manufacture
                     device.manufacture = device.type.split()[0]
-                    device.manufacture = Netbox.Sync.manufacturer(manufacture=device.manufacture, tenant=tenant)
+                    device.manufacture = Netbox.Sync.manufacturer(
+                        manufacture=device.manufacture, tenant=tenant
+                    )
 
                     # Sync Device Types
                     slug = System.Slug.create(device.family)
@@ -283,7 +299,9 @@ class Data:
 
                     # Sync Device Roles
                     slug = System.Slug.create(device.role)
-                    device.role = Netbox.Sync.devicerole(role=device.role, slug=slug, tenant=tenant)
+                    device.role = Netbox.Sync.devicerole(
+                        role=device.role, slug=slug, tenant=tenant
+                    )
 
                     # Sync Device IP Address
                     device.primary_ip4 = Netbox.Sync.ipaddress(
@@ -297,6 +315,7 @@ class Data:
                         model="ipaddress",
                         filter=device.primary_ip4,
                         tag=dnac_tag,
+                        tenant=tenant,
                     )
                     # Device Site Location
                     device.site = Site.objects.get(

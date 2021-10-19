@@ -1,4 +1,4 @@
-from utilities.forms import BootstrapMixin, StaticSelect2
+from utilities.forms import BootstrapMixin, StaticSelect
 from extras.forms import CustomFieldModelForm
 from .models import Settings
 
@@ -15,13 +15,13 @@ class SettingsForm(BootstrapMixin, CustomFieldModelForm):
             "status",
         ]
         widgets = {
-            "status": StaticSelect2(
+            "status": StaticSelect(
                 choices=(
                     ("True", "Yes"),
                     ("False", "No"),
                 )
             ),
-            "verify": StaticSelect2(
+            "verify": StaticSelect(
                 choices=(
                     (True, "Yes"),
                     (False, "No"),

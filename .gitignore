@@ -1,0 +1,5 @@
+build/
+dist/
+.DS_Store
+ciscodnacnetbox.egg-info/
+*__pycache__*
