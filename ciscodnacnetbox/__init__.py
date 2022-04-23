@@ -1,15 +1,17 @@
 from extras.plugins import PluginConfig
+from .metadata import App
+
 
 class CiscoDNACenterConfig(PluginConfig):
-    version = "1.0"
-    name = "ciscodnacnetbox"
+    version = App._VERSION_
+    name = App._NAME_
     verbose_name = "Cisco DNA Center Sync Plugin"
-    description = "Cisco DNA Center Integration with NetBox"
-    author = "Robert Csapo"
-    author_email = "rcsapo@cisco.com"
+    description = App._DESC_
+    author = App._AUTHOR_
+    author_email = App._EMAIL_
     required_settings = []
     default_settings = {}
-    base_url = "ciscodnacnetbox"
+    base_url = App._NAME_
     caching_config = {}
 
 

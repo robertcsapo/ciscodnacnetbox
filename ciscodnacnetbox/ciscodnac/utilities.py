@@ -5,12 +5,6 @@ from extras.models import Tag
 from dcim.models import Site
 from tenancy.models import Tenant
 
-class Plugin:
-    name = "ciscodnacnetbox"
-    version = "1.0"
-    description = "Cisco DNA Center Integration with NetBox"
-    author = "Robert Csapo"
-    author_email = "rcsapo@cisco.com"
 
 class System:
     """

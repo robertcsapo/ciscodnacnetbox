@@ -1,5 +1,9 @@
 from django.urls import path
+from netbox.views.generic import ObjectChangeLogView
 from . import views
+from .models import Settings
+
+app_name = "ciscodnacnetbox"
 
 urlpatterns = (
     # Settings
@@ -16,6 +20,7 @@ urlpatterns = (
         views.SettingsDeleteBulk.as_view(),
         name="settings_delete_bulk",
     ),
+    path("settings/<int:pk>/changelog/", ObjectChangeLogView.as_view(), name="settings_changelog", kwargs={"model": Settings}),
     # Status
     path("status/", views.StatusView.as_view(), name="status"),
     # Tenant Data

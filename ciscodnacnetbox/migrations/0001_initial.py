@@ -10,7 +10,9 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(auto_created=True, primary_key=True, serialize=False),
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False
+                    ),
                 ),
                 ("hostname", models.CharField(max_length=2000, unique=True)),
                 ("username", models.CharField(max_length=100)),
@@ -18,8 +20,19 @@ class Migration(migrations.Migration):
                 ("version", models.CharField(max_length=10)),
                 ("verify", models.BooleanField(default=False)),
                 ("status", models.BooleanField(default=True)),
+                ("created", models.DateTimeField(
+                    auto_now_add=True,
+                    blank=True,
+                    null=True
+                )),
+                ("last_updated", models.DateTimeField(
+                    auto_now_add=True,
+                    blank=True,
+                    null=True
+                )),
             ],
             options={
+                "app_label": "ciscodnacnetbox",
                 "ordering": ["hostname"],
             },
         ),

@@ -6,21 +6,21 @@ menu_items = (
     PluginMenuItem(
         link="plugins:ciscodnacnetbox:status",
         link_text="Status",
-        permissions=["admin"],
+        permissions=["ciscodnacnetbox.admin_full"],
         buttons=(
             PluginMenuButton(
                 link="plugins:ciscodnacnetbox:sync_full",
                 title="Settings",
                 icon_class="mdi mdi-all-inclusive",
                 color=ButtonColorChoices.BLUE,
-                permissions=["admin"],
+                permissions=["ciscodnacnetbox.admin_full"],
             ),
             PluginMenuButton(
                 link="plugins:ciscodnacnetbox:settings",
                 title="Settings",
                 icon_class="mdi mdi-cog",
                 color=ButtonColorChoices.BLUE,
-                permissions=["admin"],
+                permissions=["ciscodnacnetbox.admin_full"],
             ),
         ),
     ),

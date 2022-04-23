@@ -1,9 +1,9 @@
-from utilities.forms import BootstrapMixin, StaticSelect2
-from extras.forms import CustomFieldModelForm
+from utilities.forms import StaticSelect
+from netbox.forms import NetBoxModelForm
 from .models import Settings
 
 
-class SettingsForm(BootstrapMixin, CustomFieldModelForm):
+class SettingsForm(NetBoxModelForm):
     class Meta:
         model = Settings
         fields = [
@@ -15,13 +15,13 @@ class SettingsForm(BootstrapMixin, CustomFieldModelForm):
             "status",
         ]
         widgets = {
-            "status": StaticSelect2(
+            "status": StaticSelect(
                 choices=(
                     ("True", "Yes"),
                     ("False", "No"),
                 )
             ),
-            "verify": StaticSelect2(
+            "verify": StaticSelect(
                 choices=(
                     (True, "Yes"),
                     (False, "No"),

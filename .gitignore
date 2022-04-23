@@ -1,0 +1,7 @@
+build/
+dist/
+.venv/*
+dev/*
+.DS_Store
+ciscodnacnetbox.egg-info/
+*__pycache__*

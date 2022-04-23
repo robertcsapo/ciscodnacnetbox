@@ -21,7 +21,7 @@ class SettingsView(generic.ObjectListView):
     """
     Cisco DNA Center Settings
     """
-    
+
     queryset = Settings.objects.all()
     table = SettingsTable
     template_name = "ciscodnacnetbox/settings.html"
@@ -33,7 +33,7 @@ class SettingsEdit(generic.ObjectEditView):
     """
 
     queryset = Settings.objects.all()
-    model_form = SettingsForm
+    form = SettingsForm
     template_name = "ciscodnacnetbox/settings_edit.html"
 
 
@@ -236,11 +236,13 @@ class PurgeTenant(View):
         form = ConfirmationForm(initial=request.GET)
         return render(
             request,
-            "generic/object_delete.html",
+            "generic/confirmation_form.html",
             {
                 "obj": tenant,
                 "form": form,
-                "return_url": reverse("plugins:ciscodnacnetbox:purge_tenant", args=(kwargs["pk"],)),
+                "return_url": reverse(
+                    "plugins:ciscodnacnetbox:purge_tenant", args=(kwargs["pk"],)
+                ),
             },
         )
 
