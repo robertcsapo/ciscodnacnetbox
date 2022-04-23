@@ -33,7 +33,7 @@ class SettingsEdit(generic.ObjectEditView):
     """
 
     queryset = Settings.objects.all()
-    model_form = SettingsForm
+    form = SettingsForm
     template_name = "ciscodnacnetbox/settings_edit.html"
 
 
@@ -236,7 +236,7 @@ class PurgeTenant(View):
         form = ConfirmationForm(initial=request.GET)
         return render(
             request,
-            "generic/object_delete.html",
+            "generic/confirmation_form.html",
             {
                 "obj": tenant,
                 "form": form,

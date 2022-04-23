@@ -21,7 +21,7 @@ PACKAGE_KEYWORDS = [
 
 setup(
     name="ciscodnacnetbox",
-    version="3.0.5",
+    version="3.2.1",
     description="Cisco DNA Center Integration with NetBox",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -30,7 +30,7 @@ setup(
     author_email="rcsapo@cisco.com",
     license="CISCO SAMPLE CODE LICENSE",
     install_requires=requirements,
-    packages=find_packages(exclude=["img"]),
+    packages=find_packages(exclude=["img", "dev"]),
     include_package_data=True,
     python_requires=">=3.3",
     zip_safe=False,

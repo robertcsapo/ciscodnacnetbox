@@ -1,9 +1,20 @@
 from django.db import models
 from django.urls import reverse
 from utilities.querysets import RestrictedQuerySet
+from netbox.models.features import ChangeLoggingMixin
 
 
-class Settings(models.Model):
+class Settings(ChangeLoggingMixin, models.Model):
+    created = models.DateTimeField(
+            auto_now_add=True,
+            blank=True,
+            null=True
+        )
+    last_updated = models.DateTimeField(
+        auto_now=True,
+        blank=True,
+        null=True
+    )
     hostname = models.CharField(max_length=2000, unique=True, blank=True, null=True)
     username = models.CharField(max_length=100)
     password = models.CharField(max_length=100)

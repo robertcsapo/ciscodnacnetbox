@@ -1,9 +1,9 @@
-from utilities.forms import BootstrapMixin, StaticSelect
-from extras.forms import CustomFieldModelForm
+from utilities.forms import StaticSelect
+from netbox.forms import NetBoxModelForm
 from .models import Settings
 
 
-class SettingsForm(BootstrapMixin, CustomFieldModelForm):
+class SettingsForm(NetBoxModelForm):
     class Meta:
         model = Settings
         fields = [
