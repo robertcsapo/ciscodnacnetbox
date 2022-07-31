@@ -60,11 +60,12 @@ class Data:
 
         # Get data from Cisco DNA Center
         for tenant, dnac in tenants.dnac.items():
-            data["dnac"][tenant]["sites"] = tenants.sites_count(tenant=dnac)
-            data["dnac"][tenant]["devices"] = 0
-            for device in tenants.devices(tenant=dnac):
-                if device.deviceSupportLevel == "Supported":
-                    data["dnac"][tenant]["devices"] += 1
+            if tenants.dnac_status[tenant] == "success":
+                data["dnac"][tenant]["sites"] = tenants.sites_count(tenant=dnac)
+                data["dnac"][tenant]["devices"] = 0
+                for device in tenants.devices(tenant=dnac):
+                    if device.deviceSupportLevel == "Supported":
+                        data["dnac"][tenant]["devices"] += 1
 
         # Gather data from NetBox
         data["netbox"] = {}
@@ -186,54 +187,55 @@ class Data:
         data = {}
         tenants = CiscoDNAC(**kwargs)
         for tenant, dnac in tenants.dnac.items():
-            results = []
-            # Sync Cisco DNA Center Tenant
-            Netbox.Sync.tenants(
-                task="system", tenant=tenant, slug=tenant.replace(".", "-")
-            )
-            # Add tag to Cisco DNA Center Tenant
-            Netbox.Sync.tags(
-                task="update",
-                model="tenant",
-                filter=tenant,
-                tag=dnac_tag,
-            )
-            for site in tenants.sites(tenant=dnac):
-                # Sync Site
-                # Unique name for `Global` as it can't be duplicate in NetBox
-                if site.siteNameHierarchy == "Global":
-                    suffix = site.id.split("-")
-                    site.siteNameHierarchy = "{} {}".format(
-                        site.siteNameHierarchy, suffix[0]
-                    )
-
-                # Use Cisco DNA Center UUID for Site as Slug
-                site.slug = site.id
-                site.sync = Netbox.Sync.site(tenant=tenant, site=site)
-
-                # Add tag to Site
+            if tenants.dnac_status[tenant] == "success":
+                results = []
+                # Sync Cisco DNA Center Tenant
+                Netbox.Sync.tenants(
+                    task="system", tenant=tenant, slug=tenant.replace(".", "-")
+                )
+                # Add tag to Cisco DNA Center Tenant
                 Netbox.Sync.tags(
                     task="update",
-                    model="site",
-                    filter=site.siteNameHierarchy,
+                    model="tenant",
+                    filter=tenant,
                     tag=dnac_tag,
                 )
+                for site in tenants.sites(tenant=dnac):
+                    # Sync Site
+                    # Unique name for `Global` as it can't be duplicate in NetBox
+                    if site.siteNameHierarchy == "Global":
+                        suffix = site.id.split("-")
+                        site.siteNameHierarchy = "{} {}".format(
+                            site.siteNameHierarchy, suffix[0]
+                        )
 
-                site.status = "Active"
-                site.status_label = "success"
-                result = {
-                    "name": site.name,
-                    "status": site.status,
-                    "status_label": site.status_label,
-                    "slug": site.slug,
-                    "sync_status": site.sync[1],
-                }
-                results.append(result)
+                    # Use Cisco DNA Center UUID for Site as Slug
+                    site.slug = site.id
+                    site.sync = Netbox.Sync.site(tenant=tenant, site=site)
 
-            # If site is removed in Cisco DNA Center, then remove in NetBox
-            Netbox.Purge.database(tenant=tenant, type="sites", data=results)
-            results = sorted(results, key=lambda k: k["name"], reverse=False)
-            data[tenant] = results
+                    # Add tag to Site
+                    Netbox.Sync.tags(
+                        task="update",
+                        model="site",
+                        filter=site.siteNameHierarchy,
+                        tag=dnac_tag,
+                    )
+
+                    site.status = "Active"
+                    site.status_label = "success"
+                    result = {
+                        "name": site.name,
+                        "status": site.status,
+                        "status_label": site.status_label,
+                        "slug": site.slug,
+                        "sync_status": site.sync[1],
+                    }
+                    results.append(result)
+
+                # If site is removed in Cisco DNA Center, then remove in NetBox
+                Netbox.Purge.database(tenant=tenant, type="sites", data=results)
+                results = sorted(results, key=lambda k: k["name"], reverse=False)
+                data[tenant] = results
         return data
 
     @classmethod
@@ -249,115 +251,116 @@ class Data:
         data = {}
         tenants = CiscoDNAC(**kwargs)
         for tenant, dnac in tenants.dnac.items():
-            results = []
+            if tenants.dnac_status[tenant] == "success":
+                results = []
 
-            # NetBox sites mandatory to assign sites
-            if System.Check.sites(tenant=tenant) is False:
-                data[tenant] = [{"sync_status": "Error: Sync sites first"}]
-                continue
-            # Map Devices (Serial) against Site UUID
-            site_members = CiscoDNAC.devices_to_sites(tenant=dnac)
+                # NetBox sites mandatory to assign sites
+                if System.Check.sites(tenant=tenant) is False:
+                    data[tenant] = [{"sync_status": "Error: Sync sites first"}]
+                    continue
+                # Map Devices (Serial) against Site UUID
+                site_members = CiscoDNAC.devices_to_sites(tenant=dnac)
 
-            # Get devices from Cisco DNA Center
-            for device in tenants.devices(tenant=dnac):
+                # Get devices from Cisco DNA Center
+                for device in tenants.devices(tenant=dnac):
 
-                # Sync Cisco DNA Center Tenant
-                Netbox.Sync.tenants(
-                    task="system", tenant=tenant, slug=tenant.replace(".", "-")
-                )
-                Netbox.Sync.tags(
-                    task="update",
-                    model="tenant",
-                    filter=tenant,
-                    tag=dnac_tag,
-                )
-
-                # Check that the device is supported in Cisco DNA Center
-                if device.deviceSupportLevel == "Supported":
-
-                    # Sync Manufacture
-                    device.manufacture = device.type.split()[0]
-                    device.manufacture = Netbox.Sync.manufacturer(
-                        manufacture=device.manufacture, tenant=tenant
+                    # Sync Cisco DNA Center Tenant
+                    Netbox.Sync.tenants(
+                        task="system", tenant=tenant, slug=tenant.replace(".", "-")
                     )
-
-                    # Sync Device Types
-                    slug = System.Slug.create(device.family)
-                    device.family_type = Netbox.Sync.devicetype(
-                        manufacture=device.manufacture,
-                        model=device.family,
-                        slug=slug,
-                        tenant=tenant,
-                    )
-                    # Add tag to devicetype
                     Netbox.Sync.tags(
                         task="update",
-                        model="devicetype",
-                        filter=slug,
+                        model="tenant",
+                        filter=tenant,
                         tag=dnac_tag,
                     )
 
-                    # Sync Device Roles
-                    slug = System.Slug.create(device.role)
-                    device.role = Netbox.Sync.devicerole(
-                        role=device.role, slug=slug, tenant=tenant
-                    )
+                    # Check that the device is supported in Cisco DNA Center
+                    if device.deviceSupportLevel == "Supported":
 
-                    # Sync Device IP Address
-                    device.primary_ip4 = Netbox.Sync.ipaddress(
-                        tenant=tenant,
-                        address=device.managementIpAddress,
-                        hostname=device.hostname,
-                    )
-                    # Add tags to IP Address
-                    Netbox.Sync.tags(
-                        task="update",
-                        model="ipaddress",
-                        filter=device.primary_ip4,
-                        tag=dnac_tag,
-                        tenant=tenant,
-                    )
-                    # Device Site Location
-                    device.site = Site.objects.get(
-                        slug=site_members[device.serialNumber],
-                        tenant=Tenant.objects.get(name=tenant).id,
-                    )
+                        # Sync Manufacture
+                        device.manufacture = device.type.split()[0]
+                        device.manufacture = Netbox.Sync.manufacturer(
+                            manufacture=device.manufacture, tenant=tenant
+                        )
 
-                    # Check if devices is reachable from Cisco DNA Center
-                    if device.reachabilityStatus == "Reachable":
-                        device.status = DeviceStatusChoices.STATUS_ACTIVE
-                        device.status_label = "success"
-                    else:
-                        device.status = DeviceStatusChoices.STATUS_FAILED
-                        device.status_label = "danger"
+                        # Sync Device Types
+                        slug = System.Slug.create(device.family)
+                        device.family_type = Netbox.Sync.devicetype(
+                            manufacture=device.manufacture,
+                            model=device.family,
+                            slug=slug,
+                            tenant=tenant,
+                        )
+                        # Add tag to devicetype
+                        Netbox.Sync.tags(
+                            task="update",
+                            model="devicetype",
+                            filter=slug,
+                            tag=dnac_tag,
+                        )
 
-                    # Sync Device and get status
-                    sync_status = Netbox.Sync.device(tenant=tenant, device=device)
-                    # Add tag to device
-                    Netbox.Sync.tags(
-                        task="update",
-                        model="device",
-                        filter=device.serialNumber,
-                        tag=dnac_tag,
-                    )
-                    result = {
-                        "name": device.hostname,
-                        "status": device.status,
-                        "status_label": device.status_label,
-                        "role": device.role,
-                        "type": device.family_type,
-                        "site": device.site,
-                        "primary_ip4": device.primary_ip4,
-                        "serial": device.serialNumber,
-                        "sync_status": sync_status[1],
-                    }
-                    results.append(result)
+                        # Sync Device Roles
+                        slug = System.Slug.create(device.role)
+                        device.role = Netbox.Sync.devicerole(
+                            role=device.role, slug=slug, tenant=tenant
+                        )
 
-            # If device is removed in Cisco DNA Center, then remove in NetBox
-            Netbox.Purge.database(tenant=tenant, type="devices", data=results)
+                        # Sync Device IP Address
+                        device.primary_ip4 = Netbox.Sync.ipaddress(
+                            tenant=tenant,
+                            address=device.managementIpAddress,
+                            hostname=device.hostname,
+                        )
+                        # Add tags to IP Address
+                        Netbox.Sync.tags(
+                            task="update",
+                            model="ipaddress",
+                            filter=device.primary_ip4,
+                            tag=dnac_tag,
+                            tenant=tenant,
+                        )
+                        # Device Site Location
+                        device.site = Site.objects.get(
+                            slug=site_members[device.serialNumber],
+                            tenant=Tenant.objects.get(name=tenant).id,
+                        )
 
-            results = sorted(results, key=lambda k: k["name"], reverse=False)
-            data[tenant] = results
+                        # Check if devices is reachable from Cisco DNA Center
+                        if device.reachabilityStatus == "Reachable":
+                            device.status = DeviceStatusChoices.STATUS_ACTIVE
+                            device.status_label = "success"
+                        else:
+                            device.status = DeviceStatusChoices.STATUS_FAILED
+                            device.status_label = "danger"
+
+                        # Sync Device and get status
+                        sync_status = Netbox.Sync.device(tenant=tenant, device=device)
+                        # Add tag to device
+                        Netbox.Sync.tags(
+                            task="update",
+                            model="device",
+                            filter=device.serialNumber,
+                            tag=dnac_tag,
+                        )
+                        result = {
+                            "name": device.hostname,
+                            "status": device.status,
+                            "status_label": device.status_label,
+                            "role": device.role,
+                            "type": device.family_type,
+                            "site": device.site,
+                            "primary_ip4": device.primary_ip4,
+                            "serial": device.serialNumber,
+                            "sync_status": sync_status[1],
+                        }
+                        results.append(result)
+
+                # If device is removed in Cisco DNA Center, then remove in NetBox
+                Netbox.Purge.database(tenant=tenant, type="devices", data=results)
+
+                results = sorted(results, key=lambda k: k["name"], reverse=False)
+                data[tenant] = results
         return data
 
     def purge_tenant(**kwargs):
