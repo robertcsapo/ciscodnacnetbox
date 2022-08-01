@@ -48,13 +48,13 @@ class Data:
         data["dnac"] = {}
 
         # Get local settings
-        for tenant in Settings.objects.all():
+        for tenant in Settings.objects.filter():
             data["dnac"][tenant.hostname] = {}
             data["dnac"][tenant.hostname]["id"] = tenant.id
             data["dnac"][tenant.hostname]["sites"] = None
             data["dnac"][tenant.hostname]["devices"] = None
-        # Get API status per Cisco DNA Center
 
+        # Get API status per Cisco DNA Center in the UI
         for k, v in tenants.dnac_status.items():
             data["dnac"][k]["api"] = v
 

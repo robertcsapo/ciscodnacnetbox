@@ -5,8 +5,6 @@ from ..models import Settings
 
 class CiscoDNAC:
 
-    # Get all tenants from Settings
-    __tenants = Settings.objects.all()
 
     def __init__(self, **kwargs):
         """
@@ -14,6 +12,7 @@ class CiscoDNAC:
         """
         self.dnac = {}
         self.dnac_status = {}
+        self.hosts = Settings.objects.filter()
 
         # Single Cisco DNA Center Instance
         if "pk" in kwargs and isinstance(kwargs["pk"], int) is True:
@@ -29,7 +28,7 @@ class CiscoDNAC:
                 self.dnac[tenant.hostname] = obj[1]
             return
 
-        for tenant in self.__tenants:
+        for tenant in self.hosts:
             self.dnac_status[tenant.hostname] = "disabled"
 
             # Create Cisco DNA Center API Object if enabled
