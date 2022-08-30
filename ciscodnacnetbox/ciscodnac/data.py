@@ -276,10 +276,14 @@ class Data:
                     )
 
                     # Check that the device is supported in Cisco DNA Center
-                    if device.deviceSupportLevel == "Supported":
+                    if device.deviceSupportLevel == "Supported" and device.serialNumber is not None:
 
                         # Sync Manufacture
-                        device.manufacture = device.type.split()[0]
+                        if device.type is not None:
+                            device.manufacture = device.type.split()[0]
+                        else:
+                            device.manufacture = "Unknown"
+
                         device.manufacture = Netbox.Sync.manufacturer(
                             manufacture=device.manufacture, tenant=tenant
                         )
