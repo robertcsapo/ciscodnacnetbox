@@ -3,7 +3,9 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     initial = True
-    dependencies = []
+    dependencies = [
+        ("contenttypes", "0002_remove_content_type_name"),
+    ]
     operations = [
         migrations.CreateModel(
             name="Settings",
@@ -20,16 +22,14 @@ class Migration(migrations.Migration):
                 ("version", models.CharField(max_length=10)),
                 ("verify", models.BooleanField(default=False)),
                 ("status", models.BooleanField(default=True)),
-                ("created", models.DateTimeField(
-                    auto_now_add=True,
-                    blank=True,
-                    null=True
-                )),
-                ("last_updated", models.DateTimeField(
-                    auto_now_add=True,
-                    blank=True,
-                    null=True
-                )),
+                (
+                    "created",
+                    models.DateTimeField(auto_now_add=True, blank=True, null=True),
+                ),
+                (
+                    "last_updated",
+                    models.DateTimeField(auto_now_add=True, blank=True, null=True),
+                ),
             ],
             options={
                 "app_label": "ciscodnacnetbox",

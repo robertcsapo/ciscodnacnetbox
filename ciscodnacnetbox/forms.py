@@ -1,4 +1,6 @@
-from utilities.forms import StaticSelect
+# from django import forms
+# from django.utils.translation import gettext_lazy as _
+# from utilities.forms import BootstrapMixin, StaticSelect
 from netbox.forms import NetBoxModelForm
 from .models import Settings
 
@@ -14,17 +16,3 @@ class SettingsForm(NetBoxModelForm):
             "verify",
             "status",
         ]
-        widgets = {
-            "status": StaticSelect(
-                choices=(
-                    ("True", "Yes"),
-                    ("False", "No"),
-                )
-            ),
-            "verify": StaticSelect(
-                choices=(
-                    (True, "Yes"),
-                    (False, "No"),
-                )
-            ),
-        }

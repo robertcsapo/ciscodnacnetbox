@@ -15,6 +15,8 @@ It uses the Cisco DNA Center Platform APIs to sync data.
 - Cisco DNA Center
     - Supported release: 1.3.3+
 - NetBox
+    - Supported release: 3.3, 3.4, 3.5
+        - version ciscodnacnetbox 3.5.0
     - Supported release: 3.2
         - version ciscodnacnetbox 3.2.1
     - Supported release: 3.0
